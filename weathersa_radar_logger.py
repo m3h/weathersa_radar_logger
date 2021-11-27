@@ -13,7 +13,7 @@ location_codes = {
         }
 supported_resolutions = {
     'IRS': [300, 75, 50],
-    'OTS': [300, 50],
+    'OTS': [300, 75],
 }
 
 session = requests.Session()
