@@ -59,7 +59,7 @@ def do_logging(username, password, location_code, res_300km, res_75km, res_50km,
     if logging_last is None or (current_time - logging_last) >= timedelta(minutes=15):
 
         def get_radar_res(res_bool, res_num):
-            if res_num not in supported_resolutions[radar_code]:
+            if res_num not in supported_resolutions[radar_code] or not res_bool:
                 return
 
             op = Path(output_folder) / Path(location_code) / Path(f'{res_num}km')
