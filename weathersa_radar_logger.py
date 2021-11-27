@@ -5,6 +5,7 @@ from PySimpleGUI.PySimpleGUI import RELIEF_SOLID
 
 import requests
 import PySimpleGUI as sg
+import imageio
 
 location_codes = {
         'FAIR': 'IRS',
@@ -74,6 +75,35 @@ def do_logging(username, password, location_code, res_300km, res_75km, res_50km,
         logging_last = current_time
 
 
+def gif_create(input_folder: str, delay: str):
+    print(f"Create GIF, input=\"{input_folder}\", delay={delay} ms")
+
+    input_path = Path(input_folder).resolve()
+    for subdir in input_path.iterdir():
+        if subdir.is_dir():
+            gif_create(subdir, delay)
+
+    gif_paths = sorted(
+            [
+                p for p in input_path.glob('./*.gif')
+                if p.is_file() and 'animated' not in p.stem
+                ]
+            )
+    if len(gif_paths) == 0:
+        return
+
+    images = [
+            imageio.imread(str(p.resolve())) 
+            for p in gif_paths 
+            if 'animated' not in p.stem
+            ]
+  
+    name = f'animated_{gif_paths[0].stem}_{gif_paths[-1].stem}.gif'
+
+    output_path = input_path / name
+    imageio.mimwrite(output_path, images, duration=delay)
+
+    print(f"Wrote output to {str(output_path)}")
 
 
 def main():
@@ -89,6 +119,10 @@ def main():
                 [sg.Checkbox('300 km', key='res_300km', default=True), sg.Checkbox('75 km', key='res_75km', default=True), sg.Checkbox('50 km', key='res_50km', default=True)],
                 [sg.Text('Output folder:'), sg.InputText('./', key='output_folder'), sg.FolderBrowse(target='output_folder', initial_folder='./')],
                 [sg.Button('Start'), sg.Button('Stop')],
+                [sg.Text('_'*80)],
+                [sg.Text('Gif frame delay (ms):'), sg.InputText(100, key='gif_delay')],
+                [sg.Text('Input folder:'), sg.InputText('./', key='gif_output_folder'), sg.FolderBrowse(target='gif_output_folder', initial_folder='./')],
+                [sg.Button("Create GIF", key='gif_create')],
                 ]
 
     # Create the Window
@@ -102,6 +136,8 @@ def main():
             logging_enabled = True
         elif event == 'Stop':
             logging_enabled = False
+        elif event == 'gif_create':
+            gif_create(values['gif_output_folder'], values['gif_delay'])
         else:
             do_logging(**values)
 
